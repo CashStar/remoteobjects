@@ -35,9 +35,10 @@ import httplib
 import logging
 
 from remoteobjects.dataobject import DataObject, DataObjectMetaclass
+from remoteobjects.http_requests import Http as requests_http
 from remoteobjects import fields
 
-userAgent = httplib2.Http()
+userAgent = requests_http()
 
 log = logging.getLogger('remoteobjects.http')
 

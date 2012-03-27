@@ -42,7 +42,7 @@ remoteobjects have:
 * programmable conversion between Python objects and your API's JSON resource
   format
 
-* full and correct HTTP support through the `httplib2` library, including
+* full and correct HTTP support through the `requests` library, including
   caching and authentication
 
 * delayed evaluation of objects to avoid unnecessary requests
