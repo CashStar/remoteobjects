@@ -78,12 +78,12 @@ a string that contains the response entity body.
 
         if headers:
             kwargs['headers']=headers
-        if data:
+        if body:
             kwargs['data']=body
         if redirections is not None and redirections > 0:
             kwargs['config']=dict(max_redirects=redirections)
             kwargs['allow_redirects']=True
-        if timout:
+        if timeout:
             kwargs['timeout']=self.timeout
         if self.credentials:
             kwargs['auth']=self.credentials
