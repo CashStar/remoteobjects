@@ -184,64 +184,9 @@ class HttpObject(DataObject):
         `RemoteObject` for your target API. For example, if your API illegally
         omits ``Location`` headers from 201 Created responses, override this
         method to check for and allow them.
-
         """
-        # Turn exceptional httplib2 responses into exceptions.
-        classname = cls.__name__
-        if response.status == httplib.NOT_FOUND:
-            raise cls.NotFound('No such %s %s' % (classname, url))
-        if response.status == httplib.UNAUTHORIZED:
-            raise cls.Unauthorized('Not authorized to fetch %s %s' % (classname, url))
-        if response.status == httplib.FORBIDDEN:
-            raise cls.Forbidden('Forbidden from fetching %s %s' % (classname, url))
-        if response.status == httplib.PRECONDITION_FAILED:
-            raise cls.PreconditionFailed('Precondition failed for %s request to %s' % (classname, url))
+        response.raise_for_status()
 
-        if response.status in (httplib.INTERNAL_SERVER_ERROR, httplib.BAD_REQUEST):
-            if response.status == httplib.BAD_REQUEST:
-                err_cls = cls.RequestError
-            else:
-                err_cls = cls.ServerError
-            # Pull out an error if we can.
-            content_type = response.get('content-type', '').split(';', 1)[0].strip()
-            if content_type == 'text/plain':
-                error = content.split('\n', 2)[0]
-                exc = err_cls('%d %s requesting %s %s: %s'
-                    % (response.status, response.reason, classname, url,
-                       error))
-                exc.response_error = error
-                raise exc
-            raise err_cls('%d %s requesting %s %s'
-                % (response.status, response.reason, classname, url))
-
-        try:
-            response_has_content = cls.response_has_content[response.status]
-        except KeyError:
-            # we only expect the statuses that we know do or don't have content
-            raise cls.BadResponse('Unexpected response requesting %s %s: %d %s'
-                % (classname, url, response.status, response.reason))
-
-        try:
-            location_header = cls.location_headers[response.status]
-        except KeyError:
-            pass
-        else:
-            if cls.location_header_required.get(response.status) and location_header.lower() not in response:
-                raise cls.BadResponse(
-                    "%r header missing from %d %s response requesting %s %s"
-                    % (location_header, response.status, response.reason,
-                       classname, url))
-
-        if not response_has_content:
-            # then there's no content-type either, so we're done
-            return
-
-        # check that the response body was json
-        content_type = response.get('content-type', '').split(';', 1)[0].strip()
-        if content_type not in cls.content_types:
-            raise cls.BadResponse(
-                'Bad response fetching %s %s: content-type %s is not an expected type'
-                % (classname, url, response.get('content-type')))
 
     def update_from_response(self, url, response, content):
         """Adds the content of this HTTP response and message body to this
@@ -263,24 +208,13 @@ class HttpObject(DataObject):
         """
         self.raise_for_response(url, response, content)
 
-        if self.response_has_content.get(response.status):
+        if self.response_has_content.get(response.status_code):
             try:
                 data = json.loads(content)
             except UnicodeDecodeError:
                 data = json.loads(content, cls=ForgivingDecoder)
 
             self.update_from_dict(data)
-
-        location_header = self.location_headers.get(response.status)
-        if location_header is None:
-            self._location = url
-        elif self.location_header_required.get(response.status):
-            self._location = response[location_header.lower()]
-        else:
-            self._location = response.get(location_header.lower(), url)
-
-        if 'etag' in response:
-            self._etag = response['etag']
 
     @classmethod
     def get(cls, url, http=None, **kwargs):

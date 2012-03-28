@@ -33,7 +33,6 @@ class Http(object):
 
         self.timeout = timeout
 
-    """ http object """
     def add_credentials(self, name, password, domain=""):
         """Add a name and password that will be used
         any time a request requires authentication."""
@@ -91,7 +90,7 @@ a string that contains the response entity body.
         response = requests.request(**kwargs)
 
         # TODO this is the list of things that can be passed into request.  For
-        # Now this is all I need, add the other ones as needed.
+        # now this is all I need, add the other ones as needed.
 
         # DONE       :param method: method for the new :class:`Request` object.
         # DONE       :param url: URL for the new :class:`Request` object.
@@ -112,3 +111,45 @@ a string that contains the response entity body.
 
         return (response, response.content)
 
+class Response(dict):
+    """An object more like email.Message than httplib.HTTPResponse."""
+
+    """Is this response from our local cache"""
+    fromcache = False
+
+    """HTTP protocol version used by server. 10 for HTTP/1.0, 11 for HTTP/1.1. """
+    version = 11
+
+    "Status code returned by server. "
+    status = 200
+
+    """Reason phrase returned by server."""
+    reason = "Ok"
+
+    previous = None
+
+    def __init__(self, info):
+        # info is either an email.Message or
+        # an httplib.HTTPResponse object.
+        if isinstance(info, httplib.HTTPResponse):
+            for key, value in info.getheaders():
+                self[key.lower()] = value
+            self.status = info.status
+            self['status'] = str(self.status)
+            self.reason = info.reason
+            self.version = info.version
+        elif isinstance(info, email.Message.Message):
+            for key, value in info.items():
+                self[key] = value
+            self.status = int(self['status'])
+        else:
+            for key, value in info.iteritems():
+                self[key] = value
+            self.status = int(self.get('status', self.status))
+
+
+    def __getattr__(self, name):
+        if name == 'dict':
+            return self
+        else:
+            raise AttributeError, name

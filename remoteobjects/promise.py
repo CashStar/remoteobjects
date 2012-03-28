@@ -211,7 +211,13 @@ class PromiseObject(remoteobjects.http.HttpObject):
         if self._http is None:
             http = remoteobjects.http.userAgent
 
+        # _get_kwargs seems broken, my credentials are stored in the http object
+        #self._get_kwargs['auth']=http.credentials
+        print "http: %s" % http.__dict__
+        print "_get_kwargs: %s" % self._get_kwargs
         request = self.get_request(**self._get_kwargs)
+        print "Request: %s" % request
+
         response, content = http.request(**request)
         self.update_from_response(request['uri'], response, content)
 
