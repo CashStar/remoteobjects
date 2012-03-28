@@ -83,7 +83,7 @@ a string that contains the response entity body.
         if redirections is not None and redirections > 0:
             kwargs['config']=dict(max_redirects=redirections)
             kwargs['allow_redirects']=True
-        if timeout:
+        if self.timeout:
             kwargs['timeout']=self.timeout
         if self.credentials:
             kwargs['auth']=self.credentials
