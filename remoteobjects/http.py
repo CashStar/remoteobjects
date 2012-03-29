@@ -253,7 +253,7 @@ class HttpObject(DataObject):
 
         request = obj.get_request(url=url, method='POST', body=body,
             headers=headers)
-        
+
         if http is None:
             http = userAgent
         response, content = http.request(**request)
