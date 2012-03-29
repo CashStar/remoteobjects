@@ -235,7 +235,7 @@ class HttpObject(DataObject):
         self.update_from_response(url, response, content)
         return self
 
-    def post(self, obj, http=None):
+    def post(self, url, obj, http=None):
         """Add another `RemoteObject` to this remote resource through an HTTP
         ``POST`` request.
 
@@ -247,21 +247,18 @@ class HttpObject(DataObject):
         `http` should be compatible with `httplib2.Http` objects.
 
         """
-        if getattr(self, '_location', None) is None:
-            raise ValueError('Cannot add %r to %r with no URL to POST to'
-                % (obj, self))
-
         body = json.dumps(obj.to_dict(), default=omit_nulls)
 
         headers = {'content-type': self.content_types[0]}
 
-        request = obj.get_request(url=self._location, method='POST',
-            body=body, headers=headers)
+        request = obj.get_request(url=url, method='POST', body=body,
+            headers=headers)
+        
         if http is None:
             http = userAgent
         response, content = http.request(**request)
 
-        obj.update_from_response(self._location, response, content)
+        obj.update_from_response(url, response, content)
 
     def put(self, http=None):
         """Save a previously requested `RemoteObject` back to its remote
