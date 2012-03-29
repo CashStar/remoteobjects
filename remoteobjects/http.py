@@ -235,6 +235,7 @@ class HttpObject(DataObject):
         self.update_from_response(url, response, content)
         return self
 
+    @classmethod
     def post(self, url, obj, http=None):
         """Add another `RemoteObject` to this remote resource through an HTTP
         ``POST`` request.
